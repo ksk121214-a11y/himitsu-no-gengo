@@ -38,8 +38,43 @@ const Glyphs = (() => {
     return tokens;
   }
 
+  // 文字の描画データ(svgPaths)は、通常はお絵かきツールが path/circle だけを生成するが、
+  // Supabase を直接叩けば理論上は任意のHTMLを書き込めてしまう。表示直前に、安全なSVGの
+  // 図形タグ・属性だけを残す形でサニタイズしてから innerHTML に渡す(不正なタグ・属性・
+  // イベントハンドラ・javascript: リンクなどはすべて取り除く)。
+  const SVG_ALLOWED_TAGS = new Set(['path', 'circle', 'rect', 'line', 'polyline', 'polygon', 'ellipse', 'g']);
+  const SVG_ALLOWED_ATTRS = new Set([
+    'd', 'cx', 'cy', 'r', 'rx', 'ry', 'x', 'y', 'x1', 'y1', 'x2', 'y2',
+    'width', 'height', 'points', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin'
+  ]);
+  function sanitizeSvgPaths(raw) {
+    if (!raw) return '';
+    try {
+      const doc = new DOMParser().parseFromString(
+        `<svg xmlns="http://www.w3.org/2000/svg">${raw}</svg>`, 'image/svg+xml'
+      );
+      if (doc.querySelector('parsererror')) return '';
+      const clean = (node) => {
+        [...node.children].forEach(child => {
+          if (!SVG_ALLOWED_TAGS.has(child.tagName.toLowerCase())) {
+            child.remove();
+            return;
+          }
+          [...child.attributes].forEach(attr => {
+            if (!SVG_ALLOWED_ATTRS.has(attr.name.toLowerCase())) child.removeAttribute(attr.name);
+          });
+          clean(child);
+        });
+      };
+      clean(doc.documentElement);
+      return [...doc.documentElement.children].map(c => c.outerHTML).join('');
+    } catch (e) {
+      return '';
+    }
+  }
+
   function glyphSvg(glyph) {
-    return `<svg viewBox="0 0 100 100" class="glyph-char">${glyph.svgPaths}</svg>`;
+    return `<svg viewBox="0 0 100 100" class="glyph-char">${sanitizeSvgPaths(glyph.svgPaths)}</svg>`;
   }
 
   function missingGlyphMarkup(label) {
@@ -111,5 +146,5 @@ const Glyphs = (() => {
     return Store.getSoundGlyphs(languageId).length > 0;
   }
 
-  return { parseReading, buildWordGlyph, hasAnyGlyph };
+  return { parseReading, buildWordGlyph, hasAnyGlyph, sanitizeSvgPaths };
 })();

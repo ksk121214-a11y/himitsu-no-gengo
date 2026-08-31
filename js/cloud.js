@@ -13,11 +13,13 @@ const Cloud = (() => {
   let subscribedLanguageId = null;
   const loadedLanguageIds = new Set();
 
+  // 単語3つ+4桁の数字(組み合わせは2000万通り以上)にして、総当たりで当てられにくくする。
+  // 言いやすさ・書き取りやすさを保つため、あえてランダム文字列ではなく単語の組み合わせにしている。
   const INVITE_WORDS = ['sora', 'umi', 'hoshi', 'kaze', 'tsuki', 'yama', 'hana', 'mori', 'yuki', 'nami', 'asa', 'yoru', 'kumo', 'niji'];
   function genInviteCode() {
     const pick = () => INVITE_WORDS[Math.floor(Math.random() * INVITE_WORDS.length)];
-    const num = Math.floor(100 + Math.random() * 900);
-    return `${pick()}-${pick()}-${num}`;
+    const num = Math.floor(1000 + Math.random() * 9000);
+    return `${pick()}-${pick()}-${pick()}-${num}`;
   }
 
   // ---------- DB行 -> アプリ内の形へ変換 ----------
@@ -102,18 +104,16 @@ const Cloud = (() => {
     Store.replaceLanguages(langs);
   }
 
-  async function createLanguage(name, displayName) {
+  async function createLanguage(name, displayName, passcode) {
     Store.setCurrentUserName(displayName);
-    const id = Store.uid();
     const inviteCode = genInviteCode();
-    const { error: langErr } = await client.from('languages').insert({
-      id, name, invite_code: inviteCode, created_by: userId
+    const { data, error } = await client.rpc('create_language_with_passcode', {
+      lang_name: name, display_name: displayName, invite_code: inviteCode, creation_passcode: passcode
     });
-    if (langErr) throw langErr;
-    const { error: memErr } = await client.from('language_members').insert({
-      language_id: id, user_id: userId, display_name: displayName
-    });
-    if (memErr) throw memErr;
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) throw new Error('作成に失敗しました');
+    const id = row.result_language_id;
     const lang = { id, name, inviteCode, createdAt: Date.now(), members: [displayName] };
     Store.upsertLanguageLocal(lang);
     loadedLanguageIds.add(id); // 作ったばかりなので中身は空、取得しにいく必要はない

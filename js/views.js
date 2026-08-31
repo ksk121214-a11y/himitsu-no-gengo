@@ -885,7 +885,7 @@ const Views = (() => {
           el('button', {
             type: 'button', class: 'glyph-key',
             onclick: () => { textInput.value += insertValue; textInput.focus(); }
-          }, el('span', { class: 'sound-preview', html: `<svg viewBox="0 0 100 100">${glyph.svgPaths}</svg>` }))
+          }, el('span', { class: 'sound-preview', html: `<svg viewBox="0 0 100 100">${Glyphs.sanitizeSvgPaths(glyph.svgPaths)}</svg>` }))
         );
       });
       if (keyboardPanel.children.length === 0) {
@@ -1007,21 +1007,24 @@ const Views = (() => {
     const savedName = Store.getCurrentUserName();
     const nameInput = el('input', { type: 'text', placeholder: '例: NAMIKA' });
     const myNameInput = el('input', { type: 'text', placeholder: 'あなたの表示名(例: たろう)', value: savedName && savedName !== 'わたし' ? savedName : '' });
+    const passcodeInput = el('input', { type: 'text', inputmode: 'numeric', placeholder: '部屋を作れる人だけが知っている番号' });
     const submitBtn = el('button', { class: 'primary-btn' }, '作る');
     submitBtn.addEventListener('click', async () => {
       const name = nameInput.value.trim();
       const myName = myNameInput.value.trim();
+      const passcode = passcodeInput.value.trim();
       if (!name) { UI.toast('言語の名前を入力してください'); return; }
       if (!myName) { UI.toast('あなたの表示名を入力してください'); return; }
+      if (!passcode) { UI.toast('暗証番号を入力してください'); return; }
       submitBtn.disabled = true;
       try {
-        const lang = await Cloud.createLanguage(name, myName);
+        const lang = await Cloud.createLanguage(name, myName, passcode);
         UI.closeModal();
         Router.go(`#/lang/${lang.id}/home`);
         showInviteCode(lang);
       } catch (err) {
         console.error(err);
-        UI.toast('作成に失敗しました。通信環境を確認してください。');
+        UI.toast(err && err.message ? err.message : '作成に失敗しました。通信環境を確認してください。');
         submitBtn.disabled = false;
       }
     });
@@ -1029,6 +1032,7 @@ const Views = (() => {
       el('h3', { text: '新しい言語を作る' }),
       field('言語の名前', nameInput),
       field('あなたの表示名', myNameInput),
+      field('部屋作成の暗証番号', passcodeInput),
       el('div', { class: 'modal-actions' }, [
         el('button', { class: 'secondary-btn', onclick: UI.closeModal }, 'キャンセル'),
         submitBtn
@@ -1126,7 +1130,7 @@ const Views = (() => {
       onclick: () => drawingModal(lang, sound)
     }, [
       glyph
-        ? el('div', { class: 'sound-preview', html: `<svg viewBox="0 0 100 100">${glyph.svgPaths}</svg>` })
+        ? el('div', { class: 'sound-preview', html: `<svg viewBox="0 0 100 100">${Glyphs.sanitizeSvgPaths(glyph.svgPaths)}</svg>` })
         : el('div', { class: 'sound-preview empty', text: '＋' }),
       el('div', { class: 'sound-label', text: sound }),
       glyph && glyph.reading ? el('div', { class: 'sound-reading', text: glyph.reading }) : null
@@ -1371,7 +1375,7 @@ const Views = (() => {
     const previewNote = existing
       ? el('div', { class: 'glyph-preview-note' }, [
           el('span', { text: '今の文字: ' }),
-          el('span', { class: 'sound-preview', html: `<svg viewBox="0 0 100 100">${existing.svgPaths}</svg>` })
+          el('span', { class: 'sound-preview', html: `<svg viewBox="0 0 100 100">${Glyphs.sanitizeSvgPaths(existing.svgPaths)}</svg>` })
         ])
       : null;
 
