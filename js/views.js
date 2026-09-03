@@ -1158,8 +1158,8 @@ const Views = (() => {
 
     const canvas = el('canvas', { width: size, height: size, class: 'glyph-canvas' });
     const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#eef0f6';
-    ctx.fillStyle = '#eef0f6';
+    ctx.strokeStyle = '#1c1b17';
+    ctx.fillStyle = '#1c1b17';
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';

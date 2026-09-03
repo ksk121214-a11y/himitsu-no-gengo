@@ -1,16 +1,16 @@
 :root {
-  color-scheme: dark;
-  --bg: #0f1117;
-  --surface: #171a23;
-  --border: #383f52;
+  color-scheme: light;
+  --bg: #f6f2e9;
+  --surface: #fffdf8;
+  --border: #ddd5c3;
   --border-strong: var(--ink);
-  --ink: #eef0f6;
-  --ink-soft: #8c92a8;
-  --accent: #3b82f6;
-  --accent-deep: #2563eb;
-  --accent-soft: rgba(59, 130, 246, 0.12);
-  --forest: #2dd4bf;
-  --danger: #ff6b81;
+  --ink: #1c1b17;
+  --ink-soft: #746f61;
+  --accent: #2c46d6;
+  --accent-deep: #1c30a8;
+  --accent-soft: rgba(44, 70, 214, 0.08);
+  --forest: #0f7d5f;
+  --danger: #b5342a;
   --nav-height: 60px;
   --header-height: 58px;
   --font-body: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
@@ -316,7 +316,7 @@ button, input, textarea, select {
 .tag-option.selected {
   background: var(--forest);
   border-color: var(--forest);
-  color: #0f1117;
+  color: #fff;
   font-weight: 700;
 }
 .new-category-row { display: flex; gap: 8px; margin-top: 4px; }
