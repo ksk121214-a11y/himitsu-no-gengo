@@ -13,7 +13,7 @@ const Views = (() => {
     const root = el('div', { class: 'view view-home' });
 
     root.appendChild(el('p', { class: 'lead-text' },
-      '仲間だけがわかる、秘密の言語を作ろう。'));
+      '友達だけに伝わる言語を作れます。'));
 
     root.appendChild(el('button', { class: 'ghost-btn', onclick: () => joinLanguageForm() }, '合言葉で参加する'));
 
@@ -851,8 +851,8 @@ const Views = (() => {
     root.appendChild(list);
 
     const inputRow = el('div', { class: 'chat-input-row' });
-    const keyboardToggleBtn = el('button', { class: 'icon-btn chat-dict-btn', text: '🔤', onclick: () => toggleKeyboard() });
-    const searchBtn = el('button', { class: 'icon-btn chat-dict-btn', text: '🔎', onclick: () => openChatDictSearch(lang, textInput) });
+    const keyboardToggleBtn = el('button', { class: 'chat-dict-btn', text: '文字', onclick: () => toggleKeyboard() });
+    const searchBtn = el('button', { class: 'chat-dict-btn', text: '検索', onclick: () => openChatDictSearch(lang, textInput) });
     const textInput = el('input', { type: 'text', placeholder: '自分たちの言語で入力…', class: 'chat-text-input' });
     const sendBtn = el('button', { class: 'send-btn', text: '送信' });
 
@@ -1138,13 +1138,13 @@ const Views = (() => {
   }
 
   const DRAW_TOOLS = [
-    { id: 'pen', label: 'ペン', icon: '✏️' },
+    { id: 'pen', label: 'ペン', icon: '∿' },
     { id: 'line', label: '直線', icon: '╱' },
     { id: 'dot', label: '点', icon: '●' },
     { id: 'circle', label: '丸', icon: '○' },
     { id: 'rect', label: '四角', icon: '□' },
     { id: 'triangle', label: '三角', icon: '△' },
-    { id: 'eraser', label: '消しゴム', icon: '🧹' }
+    { id: 'eraser', label: '消しゴム', icon: '⌫' }
   ];
   const ERASE_RADIUS = 16;
 
