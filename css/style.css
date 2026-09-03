@@ -1,20 +1,25 @@
 :root {
   color-scheme: dark;
-  --bg: #0f1117;
-  --bg-deep: #191c26;
-  --surface: #171a23;
-  --surface-2: #1e222d;
-  --border: #2b303f;
-  --ink: #eef0f6;
-  --ink-soft: #8c92a8;
-  --accent: #3b82f6;
-  --accent-deep: #2563eb;
-  --accent-soft: rgba(59, 130, 246, 0.16);
+  --bg: #0a0a12;
+  --bg-deep: #12111e;
+  --surface: rgba(148, 130, 255, 0.07);
+  --surface-2: rgba(148, 130, 255, 0.11);
+  --border: rgba(255, 255, 255, 0.09);
+  --ink: #f4f2fb;
+  --ink-soft: #9d99bb;
+  --accent: #7c6cff;
+  --accent-deep: #a48bfa;
+  --accent-soft: rgba(124, 108, 255, 0.18);
+  --accent2: #a855f7;
+  --accent3: #ec4899;
+  --accent-cyan: #22d3ee;
+  --gradient-brand: linear-gradient(135deg, #4f8dff 0%, #8b5cf6 50%, #ec4899 100%);
+  --gradient-brand-soft: linear-gradient(135deg, rgba(79, 141, 255, 0.16), rgba(139, 92, 246, 0.16), rgba(236, 72, 153, 0.16));
   --forest: #2dd4bf;
   --forest-soft: rgba(45, 212, 191, 0.14);
   --danger: #ff6b81;
   --danger-soft: rgba(255, 107, 129, 0.14);
-  --radius: 16px;
+  --radius: 18px;
   --nav-height: 62px;
   --header-height: 56px;
   --font-body: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
@@ -44,6 +49,24 @@ input, select, textarea {
   font-size: 16px;
 }
 
+@keyframes blob-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(26px, 34px) scale(1.12); }
+}
+@keyframes blob-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-28px, -20px) scale(1.15); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fab-pulse {
+  0%, 100% { box-shadow: 0 8px 28px rgba(139, 92, 246, 0.5), 0 0 0 0 rgba(236, 72, 153, 0.35); }
+  50% { box-shadow: 0 8px 32px rgba(139, 92, 246, 0.68), 0 0 0 10px rgba(236, 72, 153, 0); }
+}
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
 #app {
   max-width: 480px;
   margin: 0 auto;
@@ -52,11 +75,37 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.20), transparent 45%),
-    radial-gradient(circle at 90% 15%, rgba(45, 212, 191, 0.12), transparent 40%),
+    radial-gradient(circle at 15% 0%, rgba(124, 108, 255, 0.22), transparent 45%),
+    radial-gradient(circle at 90% 15%, rgba(236, 72, 153, 0.14), transparent 40%),
+    radial-gradient(circle at 30% 100%, rgba(34, 211, 238, 0.10), transparent 45%),
     var(--bg);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+#app::before, #app::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  z-index: 0;
+  pointer-events: none;
+}
+#app::before {
+  width: 300px;
+  height: 300px;
+  top: -80px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(124, 108, 255, 0.38), transparent 70%);
+  animation: blob-drift-a 17s ease-in-out infinite;
+}
+#app::after {
+  width: 340px;
+  height: 340px;
+  bottom: 40px;
+  right: -110px;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.28), transparent 70%);
+  animation: blob-drift-b 21s ease-in-out infinite;
 }
 
 /* ---------- ヘッダー ---------- */
@@ -65,7 +114,9 @@ input, select, textarea {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  background: rgba(20, 19, 32, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -75,10 +126,14 @@ input, select, textarea {
 .app-header h1 {
   flex: 1;
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
   text-align: center;
-  color: var(--ink);
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.02em;
 }
 
 .icon-btn {
@@ -93,6 +148,7 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: background 0.15s;
 }
 .icon-btn:active { background: var(--accent-soft); }
 
@@ -102,6 +158,8 @@ input, select, textarea {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 16px 16px calc(var(--nav-height) + 88px);
+  position: relative;
+  z-index: 1;
 }
 
 .view { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -134,7 +192,8 @@ input, select, textarea {
   color: var(--ink);
   margin-top: 20px;
   padding-bottom: 8px;
-  border-bottom: 2px solid var(--accent);
+  border-bottom: 2px solid transparent;
+  border-image: var(--gradient-brand) 1;
 }
 .rule-group-title:first-child { margin-top: 4px; }
 
@@ -150,9 +209,14 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 18px rgba(20, 10, 50, 0.25);
   min-width: 0;
   width: 100%;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.lang-card:active, .word-card:active, .rule-card:active {
+  transform: scale(0.98);
+  border-color: var(--accent);
 }
 
 .lang-card-title { font-size: 17px; font-weight: 700; }
@@ -174,7 +238,16 @@ input, select, textarea {
 .rule-content { font-size: 13px; color: var(--ink-soft); white-space: pre-wrap; word-break: break-word; }
 
 /* ---------- 言語ホーム ---------- */
-.lang-hero h2 { margin: 0 0 4px; font-weight: 800; font-size: 24px; }
+.lang-hero h2 {
+  margin: 0 0 4px;
+  font-weight: 800;
+  font-size: 24px;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  width: fit-content;
+}
 .lang-hero-meta { margin: 0; font-size: 13px; color: var(--ink-soft); }
 
 .stat-grid {
@@ -191,8 +264,18 @@ input, select, textarea {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  box-shadow: 0 4px 18px rgba(20, 10, 50, 0.2);
+  transition: transform 0.15s ease;
 }
-.stat-value { font-size: 20px; font-weight: 800; color: var(--accent-deep); }
+.stat-tile:active { transform: scale(0.97); }
+.stat-value {
+  font-size: 21px;
+  font-weight: 800;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .stat-label { font-size: 11px; color: var(--ink-soft); }
 
 .ghost-btn {
@@ -204,7 +287,9 @@ input, select, textarea {
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
+  transition: border-color 0.15s, transform 0.15s;
 }
+.ghost-btn:active { transform: scale(0.98); }
 .ghost-btn.danger { color: var(--danger); border-color: var(--danger-soft); }
 
 /* ---------- 辞書(あいうえお順の一覧) ---------- */
@@ -214,14 +299,18 @@ input, select, textarea {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--ink);
   font-size: 15px;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
+.search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 .dict-entry-list { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .dict-entry {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid transparent;
+  border-image: linear-gradient(180deg, #4f8dff, #ec4899) 1;
   border-radius: 10px;
   padding: 12px 14px;
   text-align: left;
@@ -230,7 +319,9 @@ input, select, textarea {
   gap: 4px;
   min-width: 0;
   width: 100%;
+  transition: transform 0.15s ease;
 }
+.dict-entry:active { transform: scale(0.98); }
 .dict-entry-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dict-entry-reading { font-size: 16px; font-weight: 800; }
 .dict-entry-meaning { font-size: 14px; color: var(--ink); }
@@ -257,7 +348,7 @@ input, select, textarea {
 }
 .dict-entry-form-row .glyph-char { width: 20px; height: 20px; }
 .dict-entry-form-label {
-  color: var(--accent);
+  color: var(--accent-deep);
   font-weight: 700;
   flex-shrink: 0;
   background: var(--accent-soft);
@@ -284,7 +375,9 @@ input, select, textarea {
   gap: 6px;
   text-align: left;
   min-width: 0;
+  transition: transform 0.15s ease;
 }
+.category-tile:active { transform: scale(0.97); }
 .category-name { font-size: 14px; font-weight: 700; color: var(--forest); word-break: break-word; }
 .category-count { font-size: 12px; color: var(--ink-soft); }
 
@@ -295,13 +388,14 @@ input, select, textarea {
   align-items: center;
   gap: 10px;
   background: var(--bg-deep);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 10px;
 }
 .form-row-text { min-width: 0; }
 .form-row-label {
   font-size: 11px;
-  color: var(--accent);
+  color: var(--accent-deep);
   font-weight: 700;
   background: var(--accent-soft);
   padding: 2px 8px;
@@ -321,7 +415,9 @@ input, select, textarea {
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--ink-soft);
+  transition: transform 0.15s;
 }
+.tag-option:active { transform: scale(0.95); }
 .tag-option.selected {
   background: var(--forest);
   border-color: var(--forest);
@@ -336,6 +432,7 @@ input, select, textarea {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--ink);
 }
 
 /* ---------- 単語フォーム: 活用形 ---------- */
@@ -362,6 +459,7 @@ input, select, textarea {
   flex-shrink: 0;
   width: 16px;
   height: 16px;
+  accent-color: var(--accent);
 }
 .form-chip {
   display: flex;
@@ -409,11 +507,13 @@ input, select, textarea {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--ink);
 }
 .rules-hint {
   font-size: 12px;
   color: var(--ink-soft);
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 10px;
   display: flex;
@@ -435,8 +535,15 @@ input, select, textarea {
   background: var(--accent-soft);
   color: var(--ink);
   font-size: 12px;
+  transition: transform 0.15s;
 }
-.rule-apply-btn strong { color: var(--accent); }
+.rule-apply-btn:active { transform: scale(0.97); }
+.rule-apply-btn strong {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .rule-apply-hint { color: var(--ink-soft); font-size: 11px; }
 
 /* ---------- チャット ---------- */
@@ -462,15 +569,18 @@ input, select, textarea {
   text-align: left;
 }
 .chat-bubble-row.mine .chat-bubble {
-  background: linear-gradient(160deg, var(--accent), var(--accent-deep));
+  background: linear-gradient(135deg, #4f8dff, #8b5cf6 55%, #ec4899);
   color: #fff;
-  border-color: var(--accent-deep);
+  border-color: transparent;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
 }
 
 .chat-input-area {
   position: sticky;
   bottom: 0;
-  background: var(--bg);
+  background: rgba(10, 10, 18, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   margin: 0 -16px;
   padding: 10px 16px 8px;
   box-shadow: 0 -8px 12px -4px rgba(0, 0, 0, 0.4);
@@ -509,7 +619,7 @@ input, select, textarea {
   color: var(--ink-soft);
   padding: 10px 6px;
 }
-.chat-dict-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.chat-dict-btn.active { border-color: var(--accent); color: var(--accent-deep); background: var(--accent-soft); }
 .chat-text-input {
   flex: 1;
   min-width: 0;
@@ -517,22 +627,28 @@ input, select, textarea {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
+.chat-text-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .chat-dict-btn {
   background: var(--surface);
   border: 1px solid var(--border);
   flex-shrink: 0;
 }
 .send-btn {
-  padding: 10px 16px;
+  padding: 10px 18px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(160deg, var(--accent), var(--accent-deep));
+  background: var(--gradient-brand);
   color: #fff;
   font-weight: 700;
   font-size: 14px;
   flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+  transition: transform 0.15s;
 }
+.send-btn:active { transform: scale(0.95); }
 
 /* ---------- 文字(オリジナル文字) ---------- */
 .sound-grid {
@@ -550,8 +666,10 @@ input, select, textarea {
   align-items: center;
   gap: 4px;
   min-width: 0;
+  transition: transform 0.15s, border-color 0.15s;
 }
-.sound-tile.has-glyph { border-color: var(--accent); }
+.sound-tile:active { transform: scale(0.95); }
+.sound-tile.has-glyph { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft); }
 .sound-preview {
   width: 44px;
   height: 44px;
@@ -568,7 +686,7 @@ input, select, textarea {
   border-radius: 8px;
 }
 .sound-label { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
-.sound-reading { font-size: 10px; color: var(--accent); word-break: break-word; text-align: center; }
+.sound-reading { font-size: 10px; color: var(--accent-deep); word-break: break-word; text-align: center; }
 
 .tool-bar {
   display: flex;
@@ -587,7 +705,9 @@ input, select, textarea {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--ink-soft);
+  transition: transform 0.15s;
 }
+.tool-btn:active { transform: scale(0.95); }
 .tool-btn.active {
   border-color: var(--accent);
   background: var(--accent-soft);
@@ -652,7 +772,9 @@ input, select, textarea {
   width: 100%;
   max-width: 480px;
   height: var(--nav-height);
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  background: rgba(20, 19, 32, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -666,8 +788,21 @@ input, select, textarea {
   font-size: 12px;
   font-weight: 600;
   min-width: 0;
+  position: relative;
+  transition: color 0.15s;
 }
-.nav-btn.active { color: var(--accent-deep); }
+.nav-btn.active { color: var(--ink); font-weight: 800; }
+.nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--gradient-brand);
+}
 
 /* ---------- FAB ---------- */
 .fab {
@@ -677,13 +812,16 @@ input, select, textarea {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 2px solid rgba(150, 195, 255, 0.4);
-  background: radial-gradient(circle at 35% 30%, #7db8ff 0%, var(--accent) 55%, var(--accent-deep) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: var(--gradient-brand);
   color: #fff;
   font-size: 26px;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+  box-shadow: 0 8px 28px rgba(139, 92, 246, 0.5);
   z-index: 11;
+  animation: fab-pulse 2.6s ease-in-out infinite;
+  transition: transform 0.15s;
 }
+.fab:active { transform: scale(0.92); }
 @media (max-width: 480px) {
   .fab { right: 20px; }
 }
@@ -692,7 +830,9 @@ input, select, textarea {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 6, 10, 0.65);
+  background: rgba(5, 6, 10, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -707,12 +847,27 @@ input, select, textarea {
   max-height: 86vh;
   overflow-y: auto;
   overflow-x: hidden;
-  background: var(--surface);
-  border-radius: 20px 20px 0 0;
+  background: rgba(24, 22, 38, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
   padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
   transform: translateY(12px);
   transition: transform 0.15s;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45), 0 -1px 0 0 rgba(139, 92, 246, 0.4) inset;
+  position: relative;
+}
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-brand);
+  border-radius: 22px 22px 0 0;
 }
 .modal-overlay.open .modal-content { transform: translateY(0); }
 
@@ -726,9 +881,15 @@ input, select, textarea {
   padding: 11px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--bg-deep);
   color: var(--ink);
   width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .field textarea { min-height: 70px; resize: vertical; }
 
@@ -752,21 +913,32 @@ input, select, textarea {
   border: none;
   font-size: 14px;
   font-weight: 700;
+  transition: transform 0.15s, filter 0.15s;
 }
-.primary-btn { background: linear-gradient(160deg, var(--accent), var(--accent-deep)); color: #fff; }
-.secondary-btn { background: var(--bg); color: var(--ink); border: 1px solid var(--border); }
+.primary-btn {
+  background: var(--gradient-brand);
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4);
+}
+.primary-btn:active { transform: scale(0.97); filter: brightness(1.08); }
+.secondary-btn { background: var(--bg-deep); color: var(--ink); border: 1px solid var(--border); }
+.secondary-btn:active { transform: scale(0.97); }
 .danger-btn { background: var(--danger-soft); color: var(--danger); }
+.danger-btn:active { transform: scale(0.97); }
 
 .menu-btn {
   width: 100%;
   padding: 15px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--bg-deep);
+  color: var(--ink);
   text-align: left;
   font-size: 15px;
   font-weight: 600;
+  transition: border-color 0.15s, transform 0.15s;
 }
+.menu-btn:active { transform: scale(0.98); border-color: var(--accent); }
 
 .detail-rows { display: flex; flex-direction: column; gap: 10px; }
 .detail-row { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -798,7 +970,9 @@ input, select, textarea {
   left: 50%;
   bottom: calc(var(--nav-height) + 24px);
   transform: translate(-50%, 8px);
-  background: rgba(23, 26, 35, 0.95);
+  background: rgba(24, 22, 38, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--ink);
   border: 1px solid var(--border);
   padding: 10px 18px;
@@ -810,6 +984,7 @@ input, select, textarea {
   pointer-events: none;
   max-width: 80%;
   text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
@@ -818,11 +993,23 @@ input, select, textarea {
   inset: 0;
   z-index: 200;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 14px;
   background: var(--bg);
   color: var(--ink-soft);
   font-size: 15px;
+}
+.boot-loading::before {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, #4f8dff, #8b5cf6, #ec4899, transparent);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+  animation: spin 0.9s linear infinite;
 }
 
 .invite-code-box {
@@ -830,7 +1017,7 @@ input, select, textarea {
   padding: 16px;
   border-radius: var(--radius);
   border: 1px dashed var(--accent);
-  background: var(--accent-soft);
+  background: var(--gradient-brand-soft);
   color: var(--ink);
   font-size: 20px;
   font-weight: 800;
