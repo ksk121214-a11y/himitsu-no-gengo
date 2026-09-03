@@ -52,10 +52,7 @@ input, select, textarea {
   display: flex;
   flex-direction: column;
   position: relative;
-  background:
-    radial-gradient(circle at 15% 0%, rgba(59, 130, 246, 0.20), transparent 45%),
-    radial-gradient(circle at 90% 15%, rgba(45, 212, 191, 0.12), transparent 40%),
-    var(--bg);
+  background: var(--bg);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
 }
 
@@ -65,7 +62,7 @@ input, select, textarea {
   display: flex;
   align-items: center;
   padding: 0 8px;
-  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
@@ -462,7 +459,7 @@ input, select, textarea {
   text-align: left;
 }
 .chat-bubble-row.mine .chat-bubble {
-  background: linear-gradient(160deg, var(--accent), var(--accent-deep));
+  background: var(--accent);
   color: #fff;
   border-color: var(--accent-deep);
 }
@@ -527,7 +524,7 @@ input, select, textarea {
   padding: 10px 16px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(160deg, var(--accent), var(--accent-deep));
+  background: var(--accent);
   color: #fff;
   font-weight: 700;
   font-size: 14px;
@@ -652,7 +649,7 @@ input, select, textarea {
   width: 100%;
   max-width: 480px;
   height: var(--nav-height);
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  background: var(--surface);
   border-top: 1px solid var(--border);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -677,11 +674,11 @@ input, select, textarea {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 2px solid rgba(150, 195, 255, 0.4);
-  background: radial-gradient(circle at 35% 30%, #7db8ff 0%, var(--accent) 55%, var(--accent-deep) 100%);
+  border: none;
+  background: var(--accent);
   color: #fff;
   font-size: 26px;
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
   z-index: 11;
 }
 @media (max-width: 480px) {
@@ -753,7 +750,7 @@ input, select, textarea {
   font-size: 14px;
   font-weight: 700;
 }
-.primary-btn { background: linear-gradient(160deg, var(--accent), var(--accent-deep)); color: #fff; }
+.primary-btn { background: var(--accent); color: #fff; }
 .secondary-btn { background: var(--bg); color: var(--ink); border: 1px solid var(--border); }
 .danger-btn { background: var(--danger-soft); color: var(--danger); }
 
