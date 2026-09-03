@@ -282,8 +282,37 @@ const Cloud = (() => {
     } catch (e) { console.error('メッセージの同期に失敗', e); }
   }
 
+  // ---------- 編集履歴 ----------
+  async function fetchEditHistory(languageId, limit) {
+    const { data, error } = await client
+      .from('edit_history')
+      .select('*')
+      .eq('language_id', languageId)
+      .order('created_at', { ascending: false })
+      .limit(limit || 100);
+    if (error) { console.error('履歴の取得に失敗', error); return []; }
+    return (data || []).map(row => ({
+      id: row.id,
+      languageId: row.language_id,
+      userId: row.user_id,
+      actorName: row.actor_name,
+      targetType: row.target_type,
+      targetId: row.target_id,
+      action: row.action,
+      beforeData: row.before_data,
+      afterData: row.after_data,
+      createdAt: new Date(row.created_at).getTime()
+    }));
+  }
+
+  async function restoreEditHistory(historyId) {
+    const { error } = await client.rpc('restore_edit_history', { p_history_id: historyId });
+    if (error) throw error;
+  }
+
   return {
     boot, createLanguage, joinLanguage,
-    enterLanguage, leaveLanguage, isLanguageLoaded
+    enterLanguage, leaveLanguage, isLanguageLoaded,
+    fetchEditHistory, restoreEditHistory
   };
 })();

@@ -63,6 +63,11 @@ const Views = (() => {
       onclick: () => showInviteCode(lang)
     }, '友達を招待する'));
 
+    root.appendChild(el('button', {
+      class: 'ghost-btn',
+      onclick: () => Router.go(`#/lang/${lang.id}/history`)
+    }, '変更履歴を見る'));
+
     root.appendChild(el('div', { class: 'modal-actions' }, [
       el('button', { class: 'secondary-btn', onclick: () => exportLanguageFile(lang) }, '辞書を書き出す'),
       el('button', { class: 'secondary-btn', onclick: () => importLanguageFile(lang) }, '辞書を読み込む')
@@ -137,6 +142,123 @@ const Views = (() => {
             Router.go('#/');
           }
         }, '削除する')
+      ])
+    ]);
+    UI.openModal(content);
+  }
+
+  // ---------- 変更履歴 ----------
+  function formatRelativeTime(ts) {
+    const diff = Date.now() - ts;
+    const min = Math.floor(diff / 60000);
+    if (min < 1) return 'たった今';
+    if (min < 60) return `${min}分前`;
+    const hour = Math.floor(min / 60);
+    if (hour < 24) return `${hour}時間前`;
+    const day = Math.floor(hour / 24);
+    if (day < 7) return `${day}日前`;
+    const d = new Date(ts);
+    return `${d.getMonth() + 1}月${d.getDate()}日`;
+  }
+
+  const HISTORY_TARGET_LABELS = { word: '単語', rule: 'ルール', sound_glyph: '文字', example: '例文' };
+  const HISTORY_ACTION_LABELS = { create: '追加', update: '編集', delete: '削除', restore: '復元' };
+  const HISTORY_FIELD_LABELS = {
+    word: [['reading', '読み'], ['meaning', '意味'], ['pos', '品詞'], ['pronunciation', '発音メモ'], ['description', '説明'], ['example', '例文'], ['memo', 'メモ']],
+    rule: [['category', 'カテゴリ'], ['title', 'タイトル'], ['content', '内容']],
+    sound_glyph: [['sound', '音'], ['reading', '読み方']],
+    example: [['text', '文章'], ['translation', '日本語訳'], ['title', 'タイトル'], ['note', 'メモ']]
+  };
+
+  function historyTargetName(entry) {
+    const data = entry.afterData || entry.beforeData || {};
+    if (entry.targetType === 'word') return data.reading || '(不明)';
+    if (entry.targetType === 'rule') return data.title || '(不明)';
+    if (entry.targetType === 'sound_glyph') return data.sound || '(不明)';
+    if (entry.targetType === 'example') return data.title || data.text || '(不明)';
+    return '(不明)';
+  }
+
+  function historyDiffLines(entry) {
+    if (entry.action === 'create' || entry.action === 'delete') return [];
+    const before = entry.beforeData || {};
+    const after = entry.afterData || {};
+    const lines = [];
+    const fields = HISTORY_FIELD_LABELS[entry.targetType] || [];
+    fields.forEach(([key, label]) => {
+      const b = before[key] || '';
+      const a = after[key] || '';
+      if (b !== a) lines.push(`${label}：${b || '(なし)'} → ${a || '(なし)'}`);
+    });
+    if (entry.targetType === 'word') {
+      const bc = (before.categories || []).join('・');
+      const ac = (after.categories || []).join('・');
+      if (bc !== ac) lines.push(`カテゴリ：${bc || '(なし)'} → ${ac || '(なし)'}`);
+      if (JSON.stringify(before.forms || []) !== JSON.stringify(after.forms || [])) lines.push('活用形が変更されました');
+    }
+    if (entry.targetType === 'rule') {
+      if (JSON.stringify(before.pattern || null) !== JSON.stringify(after.pattern || null)) lines.push('活用パターンが変更されました');
+      if (!!before.is_conjugation !== !!after.is_conjugation) {
+        lines.push(`動詞への自動反映：${before.is_conjugation ? 'オン' : 'オフ'} → ${after.is_conjugation ? 'オン' : 'オフ'}`);
+      }
+    }
+    if (entry.targetType === 'sound_glyph') {
+      if (before.svg_paths !== after.svg_paths) lines.push('文字の形が変更されました');
+    }
+    return lines;
+  }
+
+  function historyList(lang, entries) {
+    const root = el('div', { class: 'view view-history' });
+    if (!entries || entries.length === 0) {
+      root.appendChild(empty('まだ変更履歴がありません。単語やルール、文字を編集すると、ここに記録されます。'));
+      return root;
+    }
+    const list = el('div', { class: 'card-list' });
+    entries.forEach(entry => list.appendChild(historyCard(lang, entry)));
+    root.appendChild(list);
+    return root;
+  }
+
+  function historyCard(lang, entry) {
+    const title = `${entry.actorName}が${HISTORY_TARGET_LABELS[entry.targetType] || entry.targetType}『${historyTargetName(entry)}』を${HISTORY_ACTION_LABELS[entry.action] || entry.action}しました`;
+    const diffLines = historyDiffLines(entry);
+    const children = [
+      el('div', { class: 'rule-title', text: title }),
+      ...diffLines.map(line => el('div', { class: 'rule-content', text: line })),
+      el('div', { class: 'lang-card-meta', text: formatRelativeTime(entry.createdAt) })
+    ];
+    if ((entry.action === 'update' || entry.action === 'delete') && entry.beforeData) {
+      children.push(el('button', {
+        class: 'link-btn', type: 'button',
+        onclick: () => confirmRestore(lang, entry)
+      }, 'この状態に戻す'));
+    }
+    return el('div', { class: 'rule-card' }, children);
+  }
+
+  function confirmRestore(lang, entry) {
+    const content = el('div', { class: 'modal-form' }, [
+      el('h3', { text: 'この状態に戻しますか？' }),
+      el('p', { text: '今の内容が、この時点の内容に置き換わります。この操作も新しい履歴として記録されます。' }),
+      el('div', { class: 'modal-actions' }, [
+        el('button', { class: 'secondary-btn', onclick: UI.closeModal }, 'キャンセル'),
+        el('button', {
+          class: 'primary-btn',
+          onclick: async (e) => {
+            e.target.disabled = true;
+            try {
+              await Cloud.restoreEditHistory(entry.id);
+              UI.closeModal();
+              UI.toast('元に戻しました');
+              Router.refresh();
+            } catch (err) {
+              console.error(err);
+              UI.toast('復元に失敗しました');
+              e.target.disabled = false;
+            }
+          }
+        }, '元に戻す')
       ])
     ]);
     UI.openModal(content);
@@ -1432,6 +1554,6 @@ const Views = (() => {
   return {
     home, languageHome, dictionaryIndex, dictionaryTags, dictionaryCategory, rules, chat,
     newLanguageForm, joinLanguageForm, wordForm, ruleForm, addMenu,
-    glyphBoard, glyphDisplay
+    glyphBoard, glyphDisplay, historyList
   };
 })();

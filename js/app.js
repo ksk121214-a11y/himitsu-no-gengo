@@ -125,6 +125,16 @@ const Router = (() => {
         setHeader('文字', true);
         setNav({ showNav: false, showFab: false });
         viewRoot.appendChild(Views.glyphBoard(lang));
+      } else if (tab === 'history') {
+        currentContext = { type: 'language', lang, tab: 'history' };
+        setHeader('変更履歴', true);
+        setNav({ showNav: false, showFab: false });
+        viewRoot.appendChild(UI.el('p', { class: 'lead-text', text: '読み込み中…' }));
+        const entries = await Cloud.fetchEditHistory(lang.id);
+        const afterHistory = parseHash();
+        if (afterHistory.segments.join('/') !== segments.join('/')) return;
+        viewRoot.innerHTML = '';
+        viewRoot.appendChild(Views.historyList(lang, entries));
       } else {
         go(`#/lang/${langId}/home`);
       }
