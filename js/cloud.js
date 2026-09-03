@@ -13,13 +13,15 @@ const Cloud = (() => {
   let subscribedLanguageId = null;
   const loadedLanguageIds = new Set();
 
-  // 単語3つ+4桁の数字(組み合わせは2000万通り以上)にして、総当たりで当てられにくくする。
-  // 言いやすさ・書き取りやすさを保つため、あえてランダム文字列ではなく単語の組み合わせにしている。
-  const INVITE_WORDS = ['sora', 'umi', 'hoshi', 'kaze', 'tsuki', 'yama', 'hana', 'mori', 'yuki', 'nami', 'asa', 'yoru', 'kumo', 'niji'];
+  // 英数字5文字(0/O, 1/I/L などまぎらわしい文字を除いた31文字から選ぶ、31^5=約2860万通り)。
+  // Web Crypto の安全な乱数を使う。SQL側の regenerate_invite_code() と同じ文字セット。
+  const INVITE_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
   function genInviteCode() {
-    const pick = () => INVITE_WORDS[Math.floor(Math.random() * INVITE_WORDS.length)];
-    const num = Math.floor(1000 + Math.random() * 9000);
-    return `${pick()}-${pick()}-${pick()}-${num}`;
+    const bytes = new Uint8Array(5);
+    crypto.getRandomValues(bytes);
+    let code = '';
+    for (let i = 0; i < 5; i++) code += INVITE_CODE_CHARS[bytes[i] % INVITE_CODE_CHARS.length];
+    return code;
   }
 
   // ---------- DB行 -> アプリ内の形へ変換 ----------
@@ -75,9 +77,9 @@ const Cloud = (() => {
   async function fetchMyLanguages() {
     const { data, error } = await client
       .from('language_members')
-      .select('display_name, languages(id, name, invite_code, created_at)')
+      .select('display_name, role, languages(id, name, invite_code, created_at)')
       .eq('user_id', userId);
-    if (error) { console.error('言語一覧の取得に失敗', error); return; }
+    if (error) { console.error('言語一覧の取得に失敗', error); throw error; }
 
     const langIds = (data || []).map(r => r.languages && r.languages.id).filter(Boolean);
     let membersByLang = {};
@@ -99,7 +101,8 @@ const Cloud = (() => {
         name: r.languages.name,
         inviteCode: r.languages.invite_code,
         createdAt: new Date(r.languages.created_at).getTime(),
-        members: membersByLang[r.languages.id] || [r.display_name]
+        members: membersByLang[r.languages.id] || [r.display_name],
+        myRole: r.role
       }));
     Store.replaceLanguages(langs);
   }
@@ -114,7 +117,7 @@ const Cloud = (() => {
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error('作成に失敗しました');
     const id = row.result_language_id;
-    const lang = { id, name, inviteCode, createdAt: Date.now(), members: [displayName] };
+    const lang = { id, name, inviteCode, createdAt: Date.now(), members: [displayName], myRole: 'admin' };
     Store.upsertLanguageLocal(lang);
     loadedLanguageIds.add(id); // 作ったばかりなので中身は空、取得しにいく必要はない
     Store.replaceWordsForLanguage(id, []);
@@ -122,6 +125,15 @@ const Cloud = (() => {
     Store.replaceGlyphsForLanguage(id, []);
     Store.replaceMessagesForLanguage(id, []);
     return lang;
+  }
+
+  // 招待コードの再発行(管理者のみ、SQL側でも管理者確認を行う)
+  async function regenerateInviteCode(languageId) {
+    const { data, error } = await client.rpc('regenerate_invite_code', { p_language_id: languageId });
+    if (error) throw error;
+    const lang = Store.getLanguage(languageId);
+    if (lang) Store.upsertLanguageLocal(Object.assign({}, lang, { inviteCode: data }));
+    return data;
   }
 
   async function joinLanguage(code, displayName) {
@@ -311,7 +323,7 @@ const Cloud = (() => {
   }
 
   return {
-    boot, createLanguage, joinLanguage,
+    boot, createLanguage, joinLanguage, regenerateInviteCode,
     enterLanguage, leaveLanguage, isLanguageLoaded,
     fetchEditHistory, restoreEditHistory
   };

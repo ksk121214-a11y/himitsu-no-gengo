@@ -62,6 +62,17 @@ const Router = (() => {
       return;
     }
 
+    if (segments[0] === 'join') {
+      currentContext = { type: 'home' };
+      setHeader('秘密の言語', false);
+      setNav({ showNav: false, showFab: true });
+      Cloud.leaveLanguage();
+      viewRoot.appendChild(Views.home());
+      const codeParam = query.get('code');
+      if (codeParam) Views.joinLanguageForm(codeParam);
+      return;
+    }
+
     if (segments[0] === 'lang' && segments[1]) {
       const langId = segments[1];
       const lang = Store.getLanguage(langId);

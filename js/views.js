@@ -63,6 +63,13 @@ const Views = (() => {
       onclick: () => showInviteCode(lang)
     }, '友達を招待する'));
 
+    if (lang.myRole === 'admin') {
+      root.appendChild(el('button', {
+        class: 'ghost-btn',
+        onclick: () => confirmRegenerateInviteCode(lang)
+      }, '招待コードを再発行する'));
+    }
+
     root.appendChild(el('button', {
       class: 'ghost-btn',
       onclick: () => Router.go(`#/lang/${lang.id}/history`)
@@ -1164,11 +1171,28 @@ const Views = (() => {
   }
 
   // 合言葉(招待コード)を、友達に共有できる形で見せるモーダル
+  async function copyToClipboard(text, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      UI.toast(`${label}をコピーしました`);
+    } catch (e) {
+      UI.toast('コピーできませんでした。手動で選択してコピーしてください。');
+    }
+  }
+
+  function inviteLinkFor(code) {
+    return `${location.origin}${location.pathname}#/join?code=${encodeURIComponent(code)}`;
+  }
+
   function showInviteCode(lang) {
+    const linkInput = el('input', { type: 'text', readonly: true, value: inviteLinkFor(lang.inviteCode) });
     const content = el('div', { class: 'modal-form' }, [
       el('h3', { text: `「${lang.name}」の合言葉` }),
       el('p', { text: 'この合言葉を友達に伝えてください。友達は「合言葉で参加する」からこの言語に参加できます。' }),
       el('div', { class: 'invite-code-box', text: lang.inviteCode || '' }),
+      el('button', { class: 'secondary-btn', type: 'button', onclick: () => copyToClipboard(lang.inviteCode, '合言葉') }, '合言葉をコピー'),
+      field('招待リンク(開くと合言葉が自動で入力されます)', linkInput),
+      el('button', { class: 'secondary-btn', type: 'button', onclick: () => copyToClipboard(inviteLinkFor(lang.inviteCode), 'リンク') }, 'リンクをコピー'),
       el('div', { class: 'modal-actions' }, [
         el('button', { class: 'primary-btn', onclick: UI.closeModal }, 'わかった')
       ])
@@ -1176,10 +1200,38 @@ const Views = (() => {
     UI.openModal(content);
   }
 
-  // 友達から受け取った合言葉で、既存の言語に参加する
-  function joinLanguageForm() {
+  // 管理者だけが実行できる、招待コードの再発行(実行前に確認する)
+  function confirmRegenerateInviteCode(lang) {
+    const content = el('div', { class: 'modal-form' }, [
+      el('h3', { text: '招待コードを再発行しますか？' }),
+      el('p', { text: '今の合言葉はすぐに使えなくなります。すでに参加しているメンバーはそのまま残ります。' }),
+      el('div', { class: 'modal-actions' }, [
+        el('button', { class: 'secondary-btn', onclick: UI.closeModal }, 'キャンセル'),
+        el('button', {
+          class: 'danger-btn',
+          onclick: async (e) => {
+            e.target.disabled = true;
+            try {
+              const newCode = await Cloud.regenerateInviteCode(lang.id);
+              UI.closeModal();
+              UI.toast('新しい合言葉を発行しました');
+              showInviteCode(Object.assign({}, lang, { inviteCode: newCode }));
+            } catch (err) {
+              console.error(err);
+              UI.toast(err && err.message ? err.message : '再発行に失敗しました');
+              e.target.disabled = false;
+            }
+          }
+        }, '再発行する')
+      ])
+    ]);
+    UI.openModal(content);
+  }
+
+  // 友達から受け取った合言葉で、既存の言語に参加する。prefillCode があれば入力欄に自動で入れる。
+  function joinLanguageForm(prefillCode) {
     const savedName = Store.getCurrentUserName();
-    const codeInput = el('input', { type: 'text', placeholder: '例: sora-umi-482' });
+    const codeInput = el('input', { type: 'text', placeholder: '例: AB7K8', value: prefillCode || '' });
     const myNameInput = el('input', { type: 'text', placeholder: 'あなたの表示名(例: たろう)', value: savedName && savedName !== 'わたし' ? savedName : '' });
     const submitBtn = el('button', { class: 'primary-btn' }, '参加する');
     submitBtn.addEventListener('click', async () => {
